@@ -1,0 +1,16 @@
+{
+    "nyanko": {
+        "sheets": {
+            "dataRange": "mydata!B5:X",
+            "headerPhysicalNameRange": "mydata!B3:X3",
+            "headerLogicalNameRange": "mydata!B4:X4",
+            "headerTypeRange": "mydata!B2:X2",
+            "sheetId": "1MUqFQJ0_CAt5d1DUcwltEwmCal3fZCoafQR8-a1Tp-s",
+            "gsServiceAccount": "./gs_service_account.json"
+        },
+        "firebase": {
+            "dataCollectionName": "Nyanko",
+            "metadataCollectionName": "MetaNyanko"
+        }
+    }
+}
