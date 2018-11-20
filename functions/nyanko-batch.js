@@ -12,21 +12,24 @@ function convert_type(type, value) {
 
 
 exports.execNyankoBatch = execNyankoBatch;
-async function execNyankoBatch(firestore) {
+async function execNyankoBatch(admin) {
+
   let sheets = new Sheets();
 
   // Authentication Google API
   await sheets.authorize(path.join(__dirname, conf.nyanko.sheets.gsServiceAccount)).catch(console.error);
 
   const listOfAsyncJobs = [];
-  listOfAsyncJobs.push(importDataFromSheetsToFirestore(sheets, firestore));
+  listOfAsyncJobs.push(importDataFromSheetsToFirestore(sheets, admin));
 
-  listOfAsyncJobs.push(importMetadataFromSheetsToFirestore(sheets, firestore));
+  listOfAsyncJobs.push(importMetadataFromSheetsToFirestore(sheets, admin));
 
   return Promise.all(listOfAsyncJobs);
 }
 
-async function importDataFromSheetsToFirestore(sheets, firestore) {
+async function importDataFromSheetsToFirestore(sheets, admin) {
+  var firestore = admin.firestore();
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
   let collection = firestore.collection(conf.nyanko.firebase.dataCollectionName)
 
   // sheetsから実データを取得する
@@ -57,6 +60,7 @@ async function importDataFromSheetsToFirestore(sheets, firestore) {
     }
     // idをdoc名としてfirestoreに格納する
     if (row_dic['id']) {
+      row_dic['update_timestamp'] = timestamp;
       collection.doc(row_dic['id']).set(row_dic);
     }
   });
@@ -64,7 +68,9 @@ async function importDataFromSheetsToFirestore(sheets, firestore) {
   console.log("importDataFromSheetsToFirestore:End");
 }
 
-async function importMetadataFromSheetsToFirestore(sheets, firestore) {
+async function importMetadataFromSheetsToFirestore(sheets, admin) {
+  var firestore = admin.firestore();
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
   let collection = firestore.collection(conf.nyanko.firebase.metadataCollectionName)
 
   // sheetsからHeader物理名を取得する
@@ -89,6 +95,7 @@ async function importMetadataFromSheetsToFirestore(sheets, firestore) {
       header_logical_name_row_dic[header_name] = header_logical_name_values[0][i];
     }
   }
+  header_logical_name_row_dic['update_timestamp'] = timestamp;
   collection.doc('headerLogicalName').set(header_logical_name_row_dic).catch(console.error);
 
   // タイプを書き込む
@@ -101,6 +108,7 @@ async function importMetadataFromSheetsToFirestore(sheets, firestore) {
       header_type_row_dic[header_name] = header_type_values[0][i];
     }
   }
+  header_type_row_dic['update_timestamp'] = timestamp;
   collection.doc('headerType').set(header_type_row_dic).catch(console.error);
 
   console.log("importMetadataFromSheetsToFirestore:End");

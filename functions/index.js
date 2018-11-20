@@ -5,15 +5,15 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 admin.initializeApp();
 
+var db = admin.firestore();
+const settings = { timestampsInSnapshots: true };
+db.settings(settings);
 
 exports.startNyankoBatch = functions.https.onRequest((req, res) => {
 
-    var db = admin.firestore();
-    const settings = { timestampsInSnapshots: true };
-    db.settings(settings);
-
     const batch = require('./nyanko-batch.js');
-    batch.execNyankoBatch(db)
+    batch.execNyankoBatch(admin)
+    // console.log(admin.firebase.firestore.FieldValue.serverTimestamp());
 
 
     return res.send('ok');
