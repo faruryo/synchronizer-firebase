@@ -9,12 +9,16 @@ var db = admin.firestore();
 const settings = { timestampsInSnapshots: true };
 db.settings(settings);
 
-exports.startNyankoBatch = functions.https.onRequest((req, res) => {
+exports.startNyankoBatch = functions.https.onRequest(async (req, res) => {
 
     const batch = require('./nyanko-batch.js');
-    batch.execNyankoBatch(admin)
-    // console.log(admin.firebase.firestore.FieldValue.serverTimestamp());
 
-
-    return res.send('ok');
+    try {
+        await batch.execNyankoBatch(admin);
+        response.send("ok");
+    }
+    catch (error) {
+        console.log(error);
+        response.satatus(500).send(error);
+    }
 });
