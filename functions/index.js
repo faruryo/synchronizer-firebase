@@ -15,10 +15,10 @@ exports.startNyankoBatch = functions.https.onRequest(async (req, res) => {
 
     try {
         await batch.execNyankoBatch(admin);
-        response.send("ok");
+        res.send("ok");
     }
     catch (error) {
         console.log(error);
-        response.satatus(500).send(error);
+        res.satatus(500).send(error);
     }
 });
