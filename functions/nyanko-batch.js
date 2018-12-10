@@ -98,7 +98,7 @@ function importNyankoToFirestore(nyanko_data, admin) {
     }
     // idをdoc名としてfirestoreに格納する
     if (row_dic['id']) {
-      row_dic['update_timestamp'] = timestamp;
+      row_dic['updatedAt'] = timestamp;
       export_data[row_dic['id']] =row_dic;
     }
   });
@@ -141,28 +141,28 @@ function importMetaNyankoToFirestore(nyanko_data, admin) {
 
   // 論理名を書き込む
   let header_logical_name_row_dic = {}
-  for (let i = 0, len = nyanko_data['header_physical_names'].length; i < len; i++) {
-    const header_name = nyanko_data['header_physical_names'][i];
-    const value = nyanko_data['header_logical_names'][i];
+  for (let i = 0, len = nyanko_data['header_physical_names'][0].length; i < len; i++) {
+    const header_name = nyanko_data['header_physical_names'][0][i];
+    const value = nyanko_data['header_logical_names'][0][i];
 
     if (header_name && value) {
-      header_logical_name_row_dic[header_name] = nyanko_data['header_logical_names'][i];
+      header_logical_name_row_dic[header_name] = value;
     }
   }
-  header_logical_name_row_dic['update_timestamp'] = timestamp;
+  header_logical_name_row_dic['updatedAt'] = timestamp;
   batch.set(collection.doc('headerLogicalName'), header_logical_name_row_dic);
 
   // タイプを書き込む
   let header_type_row_dic = {}
-  for (let i = 0, len = nyanko_data['header_physical_names'].length; i < len; i++) {
-    const header_name = nyanko_data['header_physical_names'][i];
-    const value = nyanko_data['header_types'][i];
+  for (let i = 0, len = nyanko_data['header_physical_names'][0].length; i < len; i++) {
+    const header_name = nyanko_data['header_physical_names'][0][i];
+    const value = nyanko_data['header_types'][0][i];
 
     if (header_name && value) {
-      header_type_row_dic[header_name] = nyanko_data['header_types'][i];
+      header_type_row_dic[header_name] = value;
     }
   }
-  header_type_row_dic['update_timestamp'] = timestamp;
+  header_type_row_dic['updatedAt'] = timestamp;
   batch.set(collection.doc('headerType'), header_type_row_dic);
 
   return batch.commit();
