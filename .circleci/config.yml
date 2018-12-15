@@ -10,5 +10,15 @@ jobs:
       - checkout
 
       - run:
+          name: npm install
+          command: cd functions && npm install
+
+      - run:
           name: Deploy Firebase Functions
           command: firebase deploy --only functions --token=$FIREBASE_DEPLOY_TOKEN
+
+workflows:
+  version: 2
+  workflow:
+    jobs:
+    - build
