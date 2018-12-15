@@ -1,0 +1,14 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: devillex/docker-firebase
+
+    working_directory: ~/workspace
+
+    steps:
+      - checkout
+
+      - run:
+          name: Deploy Firebase Functions
+          command: firebase deploy --only functions --token=$FIREBASE_DEPLOY_TOKEN
