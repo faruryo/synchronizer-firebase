@@ -14,8 +14,12 @@ exports.startNyankoBatch = functions.https.onRequest(async (req, res) => {
     const batch = require('./nyanko-batch.js');
 
     try {
-        await batch.execNyankoBatch(admin);
-        res.send("ok");
+        result = await batch.execNyankoBatch(admin);
+        if(result) {
+            res.send("ok");
+        } else {
+            res.send("ng");
+        }
     }
     catch (error) {
         console.log(error);

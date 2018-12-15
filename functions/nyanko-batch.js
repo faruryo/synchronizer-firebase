@@ -15,6 +15,14 @@ async function execNyankoBatch(admin) {
 
   console.log("execNyankoBatch:Start");
 
+  const canRun = await canExecNyankoBatch(admin);
+
+  if(!canRun) {
+    console.log("execNyankoBatch:Bad Condition");
+    console.log("execNyankoBatch:End");
+    return false;
+  }
+
   let sheets = new Sheets();
   // Authentication Google API
   await sheets.authorize(path.join(__dirname, conf.nyanko.sheets.gsServiceAccount)).catch(console.error);
@@ -27,7 +35,24 @@ async function execNyankoBatch(admin) {
 
   await Promise.all(listOfAsyncJobs);
 
-  return console.log("execNyankoBatch:End");
+  console.log("execNyankoBatch:End");
+  return true;
+}
+
+async function canExecNyankoBatch(admin) {
+  console.log("canExecNyankoBatch:Start");
+
+  const nowSecond = admin.firestore.Timestamp.now().seconds;
+
+  let collection = admin.firestore().collection(conf.nyanko.firebase.dataCollectionName)
+  let maxUpdatedAtQuerySnapshot = await collection.orderBy('updatedAt', 'desc').limit(1).get();
+  const maxUpdatedAtSecond = maxUpdatedAtQuerySnapshot.docs[0].data().updatedAt.seconds;
+
+  const can = nowSecond - 60 > maxUpdatedAtSecond;
+  console.log(nowSecond + " - 60 > " + maxUpdatedAtSecond + " = " + can);
+  
+  console.log("canExecNyankoBatch:End");
+  return can;
 }
 
 async function getNyankoDataFromSheets(sheets) {
