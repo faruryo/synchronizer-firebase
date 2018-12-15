@@ -11,7 +11,7 @@ jobs:
 
       - run:
           name: npm install
-          command: cd functions && sudo npm install
+          command: cd functions && npm install --unsafe
 
       - run:
           name: Deploy Firebase Functions
