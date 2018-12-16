@@ -33,10 +33,39 @@ async function execNyankoBatch(admin) {
   listOfAsyncJobs.push(importNyankoToFirestore(nyanko_data, admin));
   listOfAsyncJobs.push(importMetaNyankoToFirestore(nyanko_data, admin));
 
-  await Promise.all(listOfAsyncJobs);
+  let result = await Promise.all(listOfAsyncJobs).then(results => {
+    return true;
+  }).catch(reject => {
+    console.error(reject);
+    return false;
+  });
 
   console.log("execNyankoBatch:End");
-  return true;
+  return result;
+}
+
+exports.execNyankoBatchById = execNyankoBatchById;
+async function execNyankoBatchById(admin, ids) {
+  console.log("execNyankoBatchById:Start");
+
+  let sheets = new Sheets();
+  // Authentication Google API
+  await sheets.authorize(path.join(__dirname, conf.nyanko.sheets.gsServiceAccount)).catch(console.error);
+
+  const nyanko_data = await getNyankoDataFromSheets(sheets);
+
+  let listOfAsyncJobs = [];
+  listOfAsyncJobs.push(importNyankoToFirestoreById(nyanko_data, admin, ids));
+
+  let result = await Promise.all(listOfAsyncJobs).then(results => {
+    return true;
+  }).catch(reject => {
+    console.error(reject);
+    return false;
+  });
+
+  console.log("execNyankoBatchById:End");
+  return result;
 }
 
 async function canExecNyankoBatch(admin) {
@@ -105,9 +134,42 @@ function importNyankoToFirestore(nyanko_data, admin) {
 
   let firestore = admin.firestore();
   const timestamp = admin.firestore.FieldValue.serverTimestamp();
-  let export_data = {};
+  let export_data = convertNyankodataToFirestoredata(nyanko_data, timestamp);
 
-  // sheetsのデータを変換しfirestoreに格納する
+  return importToFirestore(firestore, conf.nyanko.firebase.dataCollectionName, export_data);
+}
+
+function importNyankoToFirestoreById(nyanko_data, admin, ids) {
+
+  let firestore = admin.firestore();
+  const timestamp = admin.firestore.FieldValue.serverTimestamp();
+  let all_data = convertNyankodataToFirestoredata(nyanko_data, timestamp);
+
+  // Idsのデータのみ抽出する
+  const export_data = {};
+  for(let id of ids) {
+    if(all_data[id]) {
+      export_data[id] = all_data[id];
+    }
+  }
+  console.debug(ids + " => " + Object.keys(export_data).length + " data were found");
+
+  if(Object.keys(export_data).length === 0) {
+    return Promise.reject(new Error('Not found by specified Ids'));
+  }
+
+  return importToFirestore(firestore, conf.nyanko.firebase.dataCollectionName, export_data);
+}
+
+/**
+ * sheetsから取り出したNyankoデータをFirestoreに投入する連想配列の形式に変換する
+ * @param {*} nyanko_data 
+ * @param {*} timestamp 
+ */
+function convertNyankodataToFirestoredata(nyanko_data, timestamp) {
+
+  let all_data = {};
+
   nyanko_data['data'].forEach(row => {
     let row_dic = {}
     // 1行のデータを辞書型に変換する
@@ -121,14 +183,16 @@ function importNyankoToFirestore(nyanko_data, admin) {
         row_dic[header_name] = convert_type(header_type, value);
       }
     }
-    // idをdoc名としてfirestoreに格納する
+    // idをdoc名として連想配列に格納する
     if (row_dic['id']) {
-      row_dic['updatedAt'] = timestamp;
-      export_data[row_dic['id']] =row_dic;
+      if (timestamp) {
+        row_dic['updatedAt'] = timestamp;
+      }
+      all_data[row_dic['id']] = row_dic;
     }
   });
 
-  return importToFirestore(firestore, conf.nyanko.firebase.dataCollectionName, export_data);
+  return all_data;
 }
 
 function importToFirestore(firestore, collectionName, data) {
