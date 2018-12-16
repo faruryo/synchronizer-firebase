@@ -207,13 +207,14 @@ function importToFirestore(firestore, collectionName, data) {
     batch.set(collection.doc(key), data[key]);
     count++;
     if(count > BATCH_MAX) {
-      console.log("importToFirestore:commit");
+      console.log("importToFirestore:commit:" + count);
       listOfAsyncJobs.push(batch.commit());
       batch = firestore.batch();
       count = 0;
     }
   }
   if(count !== 0) {
+    console.log("importToFirestore:commit:" + count);
     listOfAsyncJobs.push(batch.commit());
   }
 
