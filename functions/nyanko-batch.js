@@ -2,6 +2,7 @@ const conf = require('config')
 const Sheets = require('./Sheets.js');
 const path = require('path');
 
+
 function convert_type(type, value) {
   if (type === "str") return value
   else if (type === "int") return parseInt(value)
@@ -44,6 +45,7 @@ async function execNyankoBatch(admin) {
   return result;
 }
 
+
 exports.execNyankoBatchById = execNyankoBatchById;
 async function execNyankoBatchById(admin, ids) {
   console.log("execNyankoBatchById:Start");
@@ -68,6 +70,7 @@ async function execNyankoBatchById(admin, ids) {
   return result;
 }
 
+
 async function canExecNyankoBatch(admin) {
   console.log("canExecNyankoBatch:Start");
 
@@ -83,6 +86,7 @@ async function canExecNyankoBatch(admin) {
   console.log("canExecNyankoBatch:End");
   return can;
 }
+
 
 async function getNyankoDataFromSheets(sheets) {
   console.log("getNyankoDataFromSheets:Start");
@@ -121,6 +125,7 @@ async function getNyankoDataFromSheets(sheets) {
   return Promise.resolve(data);
 }
 
+
 function getSheetsRanges(sheets, ranges) {
   let asyncJobs = [];
   for (let range of ranges) {
@@ -130,6 +135,7 @@ function getSheetsRanges(sheets, ranges) {
   return Promise.all(asyncJobs);
 }
 
+
 function importNyankoToFirestore(nyanko_data, admin) {
 
   let firestore = admin.firestore();
@@ -138,6 +144,7 @@ function importNyankoToFirestore(nyanko_data, admin) {
 
   return importToFirestore(firestore, conf.nyanko.firebase.dataCollectionName, export_data);
 }
+
 
 function importNyankoToFirestoreById(nyanko_data, admin, ids) {
 
@@ -160,6 +167,7 @@ function importNyankoToFirestoreById(nyanko_data, admin, ids) {
 
   return importToFirestore(firestore, conf.nyanko.firebase.dataCollectionName, export_data);
 }
+
 
 /**
  * sheetsから取り出したNyankoデータをFirestoreに投入する連想配列の形式に変換する
@@ -195,18 +203,26 @@ function convertNyankodataToFirestoredata(nyanko_data, timestamp) {
   return all_data;
 }
 
+/**
+ * 大量のデータを指定のcollectionに書き込む
+ * 「maximum 500 writes allowed per request」のエラーに引っかかるため、
+ *  1度に書き込む数を250に制限することで回避する
+ * @param {*} firestore 
+ * @param {*} collectionName 
+ * @param {*} data 
+ */
 function importToFirestore(firestore, collectionName, data) {
   let batch = firestore.batch();
   let collection = firestore.collection(collectionName)
 
-  const BATCH_MAX = 450;
+  const BATCH_MAX = 250;
 
   let count = 0;
   let listOfAsyncJobs = [];
   for(let key of Object.keys(data)) {
     batch.set(collection.doc(key), data[key]);
     count++;
-    if(count > BATCH_MAX) {
+    if(count >= BATCH_MAX) {
       console.log("importToFirestore:commit:" + count);
       listOfAsyncJobs.push(batch.commit());
       batch = firestore.batch();
@@ -220,6 +236,7 @@ function importToFirestore(firestore, collectionName, data) {
 
   return Promise.all(listOfAsyncJobs);
 }
+
 
 function importMetaNyankoToFirestore(nyanko_data, admin) {
   console.log("importMetaNyankoToFirestore:Start");
