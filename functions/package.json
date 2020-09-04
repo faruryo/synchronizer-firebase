@@ -18,7 +18,7 @@
     "googleapis": "34.0.0"
   },
   "devDependencies": {
-    "eslint": "4.19.1",
+    "eslint": "7.8.1",
     "eslint-plugin-promise": "3.8.0"
   },
   "private": true,
